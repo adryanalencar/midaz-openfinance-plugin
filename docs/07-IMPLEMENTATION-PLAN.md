@@ -337,6 +337,49 @@ I want to trigger an immediate sync for a specific account or date range,
 So that I don't have to wait for the scheduled hourly cron run.
 
 - **Tasks:**
-  - [ ] **8.2.1:** Expose `POST /v1/sync` accepting `{ "bank_account_id": "...", "from_date": "...", "to_date": "..." }`.
-  - [ ] **8.2.2:** Return `202 Accepted` with a `job_id`.
-  - [ ] **8.2.3:** Provide `GET /v1/sync/status` returning execution history and metrics.
+  - [x] **8.2.1:** Expose `POST /v1/sync` accepting `{ "bank_account_id": "...", "from_date": "...", "to_date": "..." }`.
+  - [x] **8.2.2:** Return `202 Accepted` with a `job_id`.
+  - [x] **8.2.3:** Provide `GET /v1/sync/status` returning execution history and metrics.
+
+---
+
+## Epic 9 [OFP-EPIC-05]: Pluggy Aggregator Integration & Real-Time Sync
+
+### Story 9.1 [OFP-STORY-501]: Modernize Pluggy Client to API v2 & Connect Token
+As an administrator without direct BACEN certificates,  
+I want to connect to bank accounts using Pluggy,  
+So that transaction statements can be mirrored into Midaz without regulatory delays.
+
+- **Tasks:**
+  - [x] **9.1.1:** Implement `POST /auth` exchange with 2-hour API Key cache.
+  - [ ] **9.1.2:** Implement `CreateConnectToken(ctx, options)` for frontend Connect Widget onboarding.
+  - [ ] **9.1.3:** Upgrade `FetchTransactions` to cursor-based `GET /v2/transactions` (`after` cursor & `createdAtFrom`).
+  - [ ] **9.1.4:** Implement `GetItem(ctx, itemID)` to query connection status (`UPDATED`, `LOGIN_ERROR`, `WAITING_USER_INPUT`).
+  - [ ] **9.1.5:** Implement active `HealthCheck(ctx)` checking upstream connectivity.
+  - [ ] **9.1.6:** Add unit tests with mock HTTP server covering all v2 endpoints.
+
+### Story 9.2 [OFP-STORY-502]: Real-Time Event-Driven Webhooks (`POST /webhooks/pluggy`)
+As a ledger system,  
+I want to receive real-time notifications from Pluggy when new transactions are available,  
+So that Midaz balances are updated immediately without waiting for hourly cron ticks.
+
+- **Tasks:**
+  - [ ] **9.2.1:** Define webhook models (`PluggyWebhookEvent`, `TransactionCreatedPayload`).
+  - [ ] **9.2.2:** Implement `WebhookHandler` in `internal/adapters/http/in/webhook_handler.go`.
+  - [ ] **9.2.3:** Add security validation: verify `payload.clientId == cfg.PluggyClientID` and optional webhook secret.
+  - [ ] **9.2.4:** On `transactions/created`, page `createdTransactionsLink` and post balanced entries to Midaz.
+  - [ ] **9.2.5:** On `item/error` or `item/deleted`, update `bank_connections` status in PostgreSQL.
+  - [ ] **9.2.6:** Register route `POST /webhooks/pluggy` in Fiber router.
+  - [ ] **9.2.7:** Add unit tests for webhook parsing, error handling, and deduplication.
+
+### Story 9.3 [OFP-STORY-503]: Pluggy Connection Onboarding & Account Mapping API
+As an application frontend,  
+I want an API to register a newly connected Pluggy Item and map its accounts to Midaz aliases,  
+So that subsequent sync cycles know which Midaz account to balance.
+
+- **Tasks:**
+  - [ ] **9.3.1:** Create `CreatePluggyConnectionUseCase` in command services.
+  - [ ] **9.3.2:** Expose endpoint `POST /v1/connections/pluggy` receiving `{ "item_id": "...", "account_id": "...", "midaz_alias": "..." }`.
+  - [ ] **9.3.3:** Persist in PostgreSQL `bank_connections` table with `provider='pluggy'`.
+  - [ ] **9.3.4:** Add unit tests for connection registration and validation.
+
