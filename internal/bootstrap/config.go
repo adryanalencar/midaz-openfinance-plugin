@@ -1,5 +1,7 @@
 package bootstrap
 
+import "fmt"
+
 const ApplicationName = "plugin-openfinance"
 
 // Config encapsulates all environment configurations for the Open Finance Plugin.
@@ -15,6 +17,14 @@ type Config struct {
 	// Sync scheduling
 	SyncIntervalMinutes         int    `env:"SYNC_INTERVAL_MINUTES" default:"60"`
 	LookbackWindowHours         int    `env:"LOOKBACK_WINDOW_HOURS" default:"24"`
+
+	// PostgreSQL Database Settings
+	DBHost                      string `env:"DB_HOST" default:"localhost"`
+	DBPort                      string `env:"DB_PORT" default:"5432"`
+	DBUser                      string `env:"DB_USER" default:"midaz"`
+	DBPassword                  string `env:"DB_PASSWORD" default:"midaz"`
+	DBName                      string `env:"DB_NAME" default:"plugin_openfinance"`
+	DBSSLMode                   string `env:"DB_SSLMODE" default:"disable"`
 
 	// Midaz Core Settings
 	MidazOnboardingURL          string `env:"MIDAZ_ONBOARDING_URL" default:"http://localhost:3000"`
@@ -45,4 +55,10 @@ type Config struct {
 	OtelDeploymentEnv           string `env:"OTEL_RESOURCE_DEPLOYMENT_ENVIRONMENT" default:"development"`
 	OtelColExporterEndpoint     string `env:"OTEL_EXPORTER_OTLP_ENDPOINT" default:""`
 	EnableTelemetry             bool   `env:"ENABLE_TELEMETRY" default:"false"`
+}
+
+// PostgreSQLDSN builds the PostgreSQL connection string.
+func (c *Config) PostgreSQLDSN() string {
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName, c.DBSSLMode)
 }
