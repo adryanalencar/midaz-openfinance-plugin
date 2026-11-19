@@ -19,8 +19,8 @@ func TestGetManifestSuccess(t *testing.T) {
 	}
 
 	mh := NewManifestHandler(cfg)
-	sh := NewSyncHandler()
-	app := NewRouter(mh, sh)
+	sh := NewSyncHandler(nil, nil)
+	app := NewRouter(mh, sh, nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/manifest", nil)
 	resp, err := app.Test(req, -1)
@@ -49,8 +49,8 @@ func TestGetManifestSuccess(t *testing.T) {
 func TestHealthCheckSuccess(t *testing.T) {
 	cfg := &bootstrap.Config{PluginHost: "http://localhost:8085"}
 	mh := NewManifestHandler(cfg)
-	sh := NewSyncHandler()
-	app := NewRouter(mh, sh)
+	sh := NewSyncHandler(nil, nil)
+	app := NewRouter(mh, sh, nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	resp, err := app.Test(req, -1)

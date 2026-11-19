@@ -12,18 +12,32 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// BackgroundWorker represents a runnable background process.
+type BackgroundWorker interface {
+	Start(ctx context.Context)
+}
+
 // Service encapsulates the lifecycle of the Open Finance Plugin.
 type Service struct {
 	FiberApp *fiber.App
 	Config   *Config
 	Logger   libLog.Logger
+	Worker   BackgroundWorker
 }
 
-// Run starts the Fiber HTTP server and handles graceful shutdown.
+// Run starts the Fiber HTTP server, background worker, and handles graceful shutdown.
 func (s *Service) Run() {
 	s.Logger.Infof("Starting %s on %s (Provider: %s)", ApplicationName, s.Config.ServerAddress, s.Config.Provider)
 
-	// Graceful shutdown channel
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// 1. Start Background Sync Worker
+	if s.Worker != nil {
+		go s.Worker.Start(ctx)
+	}
+
+	// 2. Graceful shutdown channel
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
@@ -36,12 +50,15 @@ func (s *Service) Run() {
 	<-shutdown
 	s.Logger.Infof("Shutting down %s gracefully...", ApplicationName)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	// Stop background workers
+	cancel()
 
-	if err := s.FiberApp.ShutdownWithContext(ctx); err != nil {
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	if err := s.FiberApp.ShutdownWithContext(shutdownCtx); err != nil {
 		s.Logger.Errorf("Error during shutdown: %v", err)
 	}
 
-	fmt.Println("Server stopped.")
+	fmt.Println("Server stopped cleanly.")
 }
