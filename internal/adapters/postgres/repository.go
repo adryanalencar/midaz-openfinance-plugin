@@ -78,6 +78,42 @@ func (r *Repository) FindConnectionByID(ctx context.Context, id string) (*domain
 	return &conn, nil
 }
 
+// FindConnectionByAccountID finds a bank connection by its external account ID or primary ID.
+func (r *Repository) FindConnectionByAccountID(ctx context.Context, accountID string) (*domain.BankConnection, error) {
+	query := `
+		SELECT id, provider, bank_compe, bank_account_id, midaz_account_alias,
+		       consent_id, access_token, refresh_token, token_expires_at, status, created_at, updated_at
+		FROM bank_connections
+		WHERE bank_account_id = $1 OR id = $1
+		LIMIT 1;
+	`
+
+	var conn domain.BankConnection
+	err := r.db.QueryRowContext(ctx, query, accountID).Scan(
+		&conn.ID, &conn.Provider, &conn.BankCompe, &conn.BankAccountID, &conn.MidazAccountAlias,
+		&conn.ConsentID, &conn.AccessToken, &conn.RefreshToken, &conn.TokenExpiresAt, &conn.Status,
+		&conn.CreatedAt, &conn.UpdatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &conn, nil
+}
+
+// UpdateConnectionStatus updates the operational status of a bank connection.
+func (r *Repository) UpdateConnectionStatus(ctx context.Context, id, status string) error {
+	query := `
+		UPDATE bank_connections
+		SET status = $1, updated_at = $2
+		WHERE id = $3 OR bank_account_id = $3;
+	`
+	_, err := r.db.ExecContext(ctx, query, status, time.Now().UTC(), id)
+	return err
+}
+
 // ListActiveConnections returns all active bank connections scheduled for synchronization.
 func (r *Repository) ListActiveConnections(ctx context.Context) ([]domain.BankConnection, error) {
 	query := `

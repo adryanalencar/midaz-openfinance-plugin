@@ -7,7 +7,7 @@ import (
 )
 
 // NewRouter registers all HTTP routes for the Open Finance Plugin.
-func NewRouter(mh *ManifestHandler, sh *SyncHandler) *fiber.App {
+func NewRouter(mh *ManifestHandler, sh *SyncHandler, wh *WebhookHandler, ph *PluggyHandler) *fiber.App {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 	})
@@ -29,10 +29,21 @@ func NewRouter(mh *ManifestHandler, sh *SyncHandler) *fiber.App {
 	// Midaz Console Manifest
 	app.Get("/api/manifest", mh.GetManifest)
 
-	// Sync API
+	// Webhook endpoints
+	if wh != nil {
+		app.Post("/webhooks/pluggy", wh.HandlePluggyWebhook)
+	}
+
+	// Core API Group
 	v1 := app.Group("/v1")
 	v1.Post("/sync", sh.TriggerSync)
 	v1.Get("/sync/status", sh.GetStatus)
+
+	// Pluggy Connect endpoints
+	if ph != nil {
+		v1.Post("/connect-token/pluggy", ph.CreateConnectToken)
+		v1.Post("/connections/pluggy", ph.CreateConnection)
+	}
 
 	return app
 }

@@ -52,6 +52,29 @@ func (m *mockStorageRepo) FindConnectionByID(ctx context.Context, id string) (*d
 	return nil, nil
 }
 
+func (m *mockStorageRepo) FindConnectionByAccountID(ctx context.Context, accountID string) (*domain.BankConnection, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, c := range m.connections {
+		if c.BankAccountID == accountID || c.ID == accountID {
+			return &c, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *mockStorageRepo) UpdateConnectionStatus(ctx context.Context, id, status string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for i, c := range m.connections {
+		if c.ID == id || c.BankAccountID == id {
+			m.connections[i].Status = status
+			return nil
+		}
+	}
+	return nil
+}
+
 func (m *mockStorageRepo) ListActiveConnections(ctx context.Context) ([]domain.BankConnection, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

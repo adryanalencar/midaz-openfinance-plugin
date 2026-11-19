@@ -50,8 +50,10 @@ type StorageRepository interface {
 	// Connection operations
 	SaveConnection(ctx context.Context, conn *BankConnection) error
 	FindConnectionByID(ctx context.Context, id string) (*BankConnection, error)
+	FindConnectionByAccountID(ctx context.Context, accountID string) (*BankConnection, error)
 	ListActiveConnections(ctx context.Context) ([]BankConnection, error)
 	UpdateConnectionTokens(ctx context.Context, id, accessToken, refreshToken string, expiresAt time.Time) error
+	UpdateConnectionStatus(ctx context.Context, id, status string) error
 
 	// Checkpoint operations
 	GetCheckpoint(ctx context.Context, connectionID string) (*SyncCheckpoint, error)

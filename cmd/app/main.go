@@ -9,6 +9,7 @@ import (
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/adapters/http/out/midaz"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/adapters/postgres"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/adapters/providers"
+	"github.com/LerianStudio/midaz-plugin-openfinance/internal/adapters/providers/pluggy"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/bootstrap"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/domain"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/services/command"
@@ -83,10 +84,24 @@ func main() {
 		syncWorker = workers.NewSyncWorker(cfg, storageRepo, provider, midazClient, logger)
 	}
 
-	// 10. Setup HTTP In Adapters (Manifest + Sync + Health)
+	// 10. Setup Pluggy & Webhook Handlers
+	var webhookHandler *httpIn.WebhookHandler
+	var pluggyHandler *httpIn.PluggyHandler
+	if cfg.PluggyClientID != "" || cfg.Provider == "pluggy" {
+		pluggyClient, err := pluggy.NewPluggyClient(cfg)
+		if err == nil {
+			handlePluggyWebhookCmd := command.NewHandlePluggyWebhookUseCase(cfg, pluggyClient, storageRepo, midazClient, logger)
+			createPluggyConnCmd := command.NewCreatePluggyConnectionUseCase(pluggyClient, storageRepo)
+			webhookHandler = httpIn.NewWebhookHandler(handlePluggyWebhookCmd)
+			pluggyHandler = httpIn.NewPluggyHandler(pluggyClient, createPluggyConnCmd)
+			logger.Infof("Initialized Pluggy Connect & Webhook handlers")
+		}
+	}
+
+	// 11. Setup HTTP In Adapters (Manifest + Sync + Webhooks + Pluggy + Health)
 	manifestHandler := httpIn.NewManifestHandler(cfg)
 	syncHandler := httpIn.NewSyncHandler(syncTransactionsCmd, getSyncStatusQuery)
-	router := httpIn.NewRouter(manifestHandler, syncHandler)
+	router := httpIn.NewRouter(manifestHandler, syncHandler, webhookHandler, pluggyHandler)
 
 	// 11. Start Service with graceful shutdown
 	service := &bootstrap.Service{
