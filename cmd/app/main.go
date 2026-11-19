@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
+
 	libCommons "github.com/LerianStudio/lib-commons/v2/commons"
 	libZap "github.com/LerianStudio/lib-commons/v2/commons/zap"
 	httpIn "github.com/LerianStudio/midaz-plugin-openfinance/internal/adapters/http/in"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/adapters/http/out/midaz"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/adapters/providers"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/bootstrap"
+	"github.com/LerianStudio/midaz-plugin-openfinance/internal/services/command"
+	"github.com/LerianStudio/midaz-plugin-openfinance/internal/services/query"
 )
 
 func main() {
@@ -30,14 +34,26 @@ func main() {
 	logger.Infof("Initialized banking provider: %s", provider.GetName())
 
 	// 5. Initialize Midaz API Client
-	_ = midaz.NewMidazClient(cfg)
+	midazClient := midaz.NewMidazClient(cfg)
 
-	// 6. Setup HTTP In Adapters (Manifest + Sync + Health)
+	// 6. Bootstrap: Ensure dedicated clearing account exists (@external/BRL:openfinance)
+	ensureClearingAccount := command.NewEnsureExternalAccountUseCase(midazClient)
+	if err := ensureClearingAccount.Execute(context.Background()); err != nil {
+		logger.Warnf("Clearing account verification deferred: %v", err)
+	} else {
+		logger.Infof("Verified @external clearing account: %s", cfg.MidazClearingAccountAlias)
+	}
+
+	// 7. Initialize CQRS Application Services
+	syncTransactionsCmd := command.NewSyncTransactionsUseCase(provider, midazClient)
+	getSyncStatusQuery := query.NewGetSyncStatusUseCase(provider.GetName())
+
+	// 8. Setup HTTP In Adapters (Manifest + Sync + Health)
 	manifestHandler := httpIn.NewManifestHandler(cfg)
-	syncHandler := httpIn.NewSyncHandler()
+	syncHandler := httpIn.NewSyncHandler(syncTransactionsCmd, getSyncStatusQuery)
 	router := httpIn.NewRouter(manifestHandler, syncHandler)
 
-	// 7. Start Service
+	// 9. Start Service with graceful shutdown
 	service := &bootstrap.Service{
 		FiberApp: router,
 		Config:   cfg,
