@@ -10,7 +10,6 @@ import (
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/domain"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
-	"github.com/shopspring/decimal"
 )
 
 // Repository implements domain.StorageRepository backed by PostgreSQL.

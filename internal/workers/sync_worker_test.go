@@ -149,7 +149,7 @@ func TestSyncWorkerCycleSuccess(t *testing.T) {
 	}
 
 	midazClient := midaz.NewMidazClient(cfg)
-	logger := libLog.NewNoopLogger()
+	logger := &libLog.NoneLogger{}
 
 	worker := NewSyncWorker(cfg, storage, provider, midazClient, logger)
 
@@ -205,7 +205,7 @@ func TestSyncWorkerDeduplication(t *testing.T) {
 	}
 
 	midazClient := midaz.NewMidazClient(cfg)
-	worker := NewSyncWorker(cfg, storage, provider, midazClient, libLog.NewNoopLogger())
+	worker := NewSyncWorker(cfg, storage, provider, midazClient, &libLog.NoneLogger{})
 
 	worker.runSyncCycle(context.Background())
 

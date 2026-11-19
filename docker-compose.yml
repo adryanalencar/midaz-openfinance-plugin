@@ -15,12 +15,18 @@ services:
       - PROVIDER=openfinance
       - SYNC_INTERVAL_MINUTES=60
       - LOOKBACK_WINDOW_HOURS=24
+      # PostgreSQL connection settings:
+      # Option A: Discrete parameters (default, connects to companion container below)
       - DB_HOST=plugin-postgres
       - DB_PORT=5432
       - DB_USER=midaz
       - DB_PASSWORD=midaz_secure_password
       - DB_NAME=plugin_openfinance
       - DB_SSLMODE=disable
+      - DB_AUTO_MIGRATE=true
+
+      # Option B: External database URL (if set, takes priority over DB_HOST/PORT/etc.)
+      # - DATABASE_URL=postgres://midaz:midaz_secure_password@external-db:5432/plugin_openfinance?sslmode=disable
       - MIDAZ_ONBOARDING_URL=http://midaz-onboarding:3000
       - MIDAZ_TRANSACTION_URL=http://midaz-transaction:3001
       - MIDAZ_ORGANIZATION_ID=00000000-0000-0000-0000-000000000000

@@ -29,13 +29,29 @@ func main() {
 	// 3. Structured Logging (Zap)
 	logger := libZap.InitializeLogger()
 
-	// 4. Initialize PostgreSQL Database & Storage Repository
+	// 4. Initialize PostgreSQL Database, Run Migrations & Setup Repository
 	var storageRepo domain.StorageRepository
 	db, err := postgres.ConnectPostgres(cfg.PostgreSQLDSN())
 	if err != nil {
 		logger.Warnf("PostgreSQL database connection deferred: %v", err)
 	} else {
-		logger.Infof("Connected to PostgreSQL database at %s:%s", cfg.DBHost, cfg.DBPort)
+		if cfg.IsExternalDatabase() {
+			logger.Infof("Connected to external PostgreSQL database via URL connection string")
+		} else {
+			logger.Infof("Connected to PostgreSQL database at %s:%s (database: %s)", cfg.DBHost, cfg.DBPort, cfg.DBName)
+		}
+
+		// Database Migration Governance: auto-migrate on startup if enabled
+		if cfg.DBAutoMigrate {
+			logger.Infof("Executing database migration governance check...")
+			migrator := postgres.NewMigrator(db, logger)
+			if err := migrator.MigrateUp(context.Background()); err != nil {
+				logger.Fatalf("Database migration failed: %v", err)
+			}
+		} else {
+			logger.Infof("Database auto-migration is disabled (DB_AUTO_MIGRATE=false)")
+		}
+
 		storageRepo = postgres.NewPostgresRepository(db)
 	}
 

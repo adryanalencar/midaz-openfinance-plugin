@@ -18,13 +18,16 @@ type Config struct {
 	SyncIntervalMinutes         int    `env:"SYNC_INTERVAL_MINUTES" default:"60"`
 	LookbackWindowHours         int    `env:"LOOKBACK_WINDOW_HOURS" default:"24"`
 
-	// PostgreSQL Database Settings
+	// PostgreSQL Database Settings (URL connection string takes precedence over discrete DB_* parameters)
+	DatabaseURL                 string `env:"DATABASE_URL" default:""`
+	DBURI                       string `env:"DB_URI" default:""`
 	DBHost                      string `env:"DB_HOST" default:"localhost"`
 	DBPort                      string `env:"DB_PORT" default:"5432"`
 	DBUser                      string `env:"DB_USER" default:"midaz"`
 	DBPassword                  string `env:"DB_PASSWORD" default:"midaz"`
 	DBName                      string `env:"DB_NAME" default:"plugin_openfinance"`
 	DBSSLMode                   string `env:"DB_SSLMODE" default:"disable"`
+	DBAutoMigrate               bool   `env:"DB_AUTO_MIGRATE" default:"true"`
 
 	// Midaz Core Settings
 	MidazOnboardingURL          string `env:"MIDAZ_ONBOARDING_URL" default:"http://localhost:3000"`
@@ -58,7 +61,32 @@ type Config struct {
 }
 
 // PostgreSQLDSN builds the PostgreSQL connection string.
+// If DATABASE_URL or DB_URI is set, it returns the connection string URL directly.
+// Otherwise, it constructs the DSN from individual DB_* environment variables.
 func (c *Config) PostgreSQLDSN() string {
+	if c.DatabaseURL != "" {
+		return c.DatabaseURL
+	}
+	if c.DBURI != "" {
+		return c.DBURI
+	}
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName, c.DBSSLMode)
+}
+
+// IsExternalDatabase returns true if an explicit database URL or external connection was configured.
+func (c *Config) IsExternalDatabase() bool {
+	return c.DatabaseURL != "" || c.DBURI != ""
+}
+
+// RedactedPostgreSQLDSN returns a safe representation of the DSN with passwords hidden for logging.
+func (c *Config) RedactedPostgreSQLDSN() string {
+	if c.DatabaseURL != "" {
+		return "DATABASE_URL (configured)"
+	}
+	if c.DBURI != "" {
+		return "DB_URI (configured)"
+	}
+	return fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=%s",
+		c.DBHost, c.DBPort, c.DBUser, c.DBName, c.DBSSLMode)
 }
