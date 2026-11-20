@@ -16,7 +16,7 @@ func TestHandlePluggyWebhookEndpoint(t *testing.T) {
 	mh := NewManifestHandler(cfg)
 	sh := NewSyncHandler(nil, nil)
 	wh := NewWebhookHandler(nil)
-	app := NewRouter(mh, sh, wh, nil)
+	app := NewRouter(mh, sh, wh, nil, nil)
 
 	// 1. Invalid JSON
 	reqBad := httptest.NewRequest(http.MethodPost, "/webhooks/pluggy", bytes.NewBuffer([]byte(`invalid-json`)))

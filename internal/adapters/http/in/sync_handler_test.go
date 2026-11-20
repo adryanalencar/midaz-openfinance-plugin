@@ -19,7 +19,7 @@ func TestTriggerSyncValidation(t *testing.T) {
 	mh := NewManifestHandler(cfg)
 	statusQ := query.NewGetSyncStatusUseCase("openfinance")
 	sh := NewSyncHandler(nil, statusQ)
-	app := NewRouter(mh, sh, nil, nil)
+	app := NewRouter(mh, sh, nil, nil, nil)
 
 	// 1. Missing required fields
 	req := httptest.NewRequest(http.MethodPost, "/v1/sync", bytes.NewBuffer([]byte(`{}`)))
@@ -50,7 +50,7 @@ func TestGetSyncStatusEndpoint(t *testing.T) {
 	mh := NewManifestHandler(cfg)
 	statusQ := query.NewGetSyncStatusUseCase("openfinance")
 	sh := NewSyncHandler(nil, statusQ)
-	app := NewRouter(mh, sh, nil, nil)
+	app := NewRouter(mh, sh, nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/sync/status", nil)
 	resp, err := app.Test(req, -1)

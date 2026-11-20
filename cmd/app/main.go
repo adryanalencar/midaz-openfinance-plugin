@@ -98,10 +98,11 @@ func main() {
 		}
 	}
 
-	// 11. Setup HTTP In Adapters (Manifest + Sync + Webhooks + Pluggy + Health)
+	// 11. Setup HTTP In Adapters (Manifest + Sync + Webhooks + Pluggy + Internal + Health)
 	manifestHandler := httpIn.NewManifestHandler(cfg)
 	syncHandler := httpIn.NewSyncHandler(syncTransactionsCmd, getSyncStatusQuery)
-	router := httpIn.NewRouter(manifestHandler, syncHandler, webhookHandler, pluggyHandler)
+	internalHandler := httpIn.NewInternalHandler(storageRepo)
+	router := httpIn.NewRouter(manifestHandler, syncHandler, webhookHandler, pluggyHandler, internalHandler)
 
 	// 11. Start Service with graceful shutdown
 	service := &bootstrap.Service{

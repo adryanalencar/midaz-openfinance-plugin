@@ -7,31 +7,37 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// BankConnection stores the authorization and link between an external bank and a Midaz account.
+// BankConnection stores the authorization and link between an external bank and a Midaz account,
+// supporting subaccount hierarchy under a Mother Account (CNPJ master) and reconciliation configuration.
 type BankConnection struct {
-	ID                string     `json:"id"`
-	Provider          string     `json:"provider"` // "openfinance" or "pluggy"
-	BankCompe         string     `json:"bankCompe"`
-	BankAccountID     string     `json:"bankAccountId"`
-	MidazAccountAlias string     `json:"midazAccountAlias"`
-	ConsentID         string     `json:"consentId"`
-	AccessToken       string     `json:"accessToken"`
-	RefreshToken      string     `json:"refreshToken"`
-	TokenExpiresAt    time.Time  `json:"tokenExpiresAt"`
-	Status            string     `json:"status"` // "ACTIVE", "EXPIRED", "REVOKED"
-	CreatedAt         time.Time  `json:"createdAt"`
-	UpdatedAt         time.Time  `json:"updatedAt"`
+	ID                                string    `json:"id"`
+	Provider                          string    `json:"provider"` // "openfinance" or "pluggy"
+	BankCompe                         string    `json:"bankCompe"`
+	BankAccountID                     string    `json:"bankAccountId"`
+	MidazAccountAlias                 string    `json:"midazAccountAlias"`
+	MotherAccountID                   string    `json:"motherAccountId,omitempty"`
+	MotherAccountAlias                string    `json:"motherAccountAlias,omitempty"`
+	ReconciliationEnabled             bool      `json:"reconciliationEnabled"`
+	ReconciliationReceivablesAccount  string    `json:"reconciliationReceivablesAccount,omitempty"`
+	MatcherContextID                  string    `json:"matcherContextId,omitempty"`
+	ConsentID                         string    `json:"consentId"`
+	AccessToken                       string    `json:"accessToken"`
+	RefreshToken                      string    `json:"refreshToken"`
+	TokenExpiresAt                    time.Time `json:"tokenExpiresAt"`
+	Status                            string    `json:"status"` // "ACTIVE", "EXPIRED", "REVOKED"
+	CreatedAt                         time.Time `json:"createdAt"`
+	UpdatedAt                         time.Time `json:"updatedAt"`
 }
 
 // SyncCheckpoint records the incremental cursor for continuous bank sync.
 type SyncCheckpoint struct {
-	ID             string     `json:"id"`
-	ConnectionID   string     `json:"connectionId"`
+	ID              string    `json:"id"`
+	ConnectionID    string    `json:"connectionId"`
 	LastBookingDate time.Time `json:"lastBookingDate"`
-	PaginationKey  string     `json:"paginationKey"`
-	Status         string     `json:"status"` // "IDLE", "RUNNING", "SUCCESS", "FAILED"
-	RecordsSynced  int        `json:"recordsSynced"`
-	LastSyncedAt   time.Time  `json:"lastSyncedAt"`
+	PaginationKey   string    `json:"paginationKey"`
+	Status          string    `json:"status"` // "IDLE", "RUNNING", "SUCCESS", "FAILED"
+	RecordsSynced   int       `json:"recordsSynced"`
+	LastSyncedAt    time.Time `json:"lastSyncedAt"`
 }
 
 // ProcessedTransaction represents an ingested transaction ledger entry for deduplication.
@@ -42,6 +48,7 @@ type ProcessedTransaction struct {
 	MidazTransactionCode string          `json:"midazTransactionCode"`
 	Amount               decimal.Decimal `json:"amount"`
 	CreditDebit          string          `json:"creditDebit"`
+	Status               string          `json:"status,omitempty"` // "POSTED_DIRECT", "SETTLED_VIA_RECEIVABLES"
 	SyncedAt             time.Time       `json:"syncedAt"`
 }
 
