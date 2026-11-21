@@ -91,7 +91,7 @@ func TestPluggyEndpoints(t *testing.T) {
 	mh := NewManifestHandler(cfg)
 	sh := NewSyncHandler(nil, nil)
 	ph := NewPluggyHandler(pluggyClient, createConnCmd)
-	app := NewRouter(mh, sh, nil, ph)
+	app := NewRouter(mh, sh, nil, ph, nil)
 
 	// 1. POST /v1/connect-token/pluggy
 	reqToken := httptest.NewRequest(http.MethodPost, "/v1/connect-token/pluggy", nil)

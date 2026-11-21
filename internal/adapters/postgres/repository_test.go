@@ -32,6 +32,8 @@ func TestSaveConnection(t *testing.T) {
 	mock.ExpectExec("INSERT INTO bank_connections").
 		WithArgs(
 			conn.ID, conn.Provider, conn.BankCompe, conn.BankAccountID, conn.MidazAccountAlias,
+			conn.MotherAccountID, conn.MotherAccountAlias, conn.ReconciliationEnabled,
+			conn.ReconciliationReceivablesAccount, conn.MatcherContextID,
 			conn.ConsentID, conn.AccessToken, conn.RefreshToken, conn.TokenExpiresAt, conn.Status,
 			sqlmock.AnyArg(), sqlmock.AnyArg(),
 		).
@@ -52,9 +54,12 @@ func TestListActiveConnections(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{
 		"id", "provider", "bank_compe", "bank_account_id", "midaz_account_alias",
+		"mother_account_id", "mother_account_alias", "reconciliation_enabled",
+		"reconciliation_receivables_account", "matcher_context_id",
 		"consent_id", "access_token", "refresh_token", "token_expires_at", "status", "created_at", "updated_at",
 	}).AddRow(
 		"conn-1", "openfinance", "341", "acc-100", "midaz_acc_1",
+		"", "", false, "", "",
 		"consent-1", "token-1", "refresh-1", time.Now(), "ACTIVE", time.Now(), time.Now(),
 	)
 
