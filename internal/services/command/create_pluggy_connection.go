@@ -6,31 +6,45 @@ import (
 	"time"
 
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/adapters/providers/pluggy"
+	"github.com/LerianStudio/midaz-plugin-openfinance/internal/bootstrap"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/domain"
 	"github.com/google/uuid"
 )
 
 // CreatePluggyConnectionCommand contains inputs to register a newly connected Pluggy account.
 type CreatePluggyConnectionCommand struct {
-	ItemID            string `json:"itemId"`
-	AccountID         string `json:"accountId"`
-	MidazAccountAlias string `json:"midazAccountAlias"`
+	ItemID                           string `json:"itemId"`
+	AccountID                        string `json:"accountId"`
+	MidazAccountAlias                string `json:"midazAccountAlias"`
+	ClearingAccountAlias             string `json:"clearingAccountAlias,omitempty"`
+	MotherAccountID                  string `json:"motherAccountId,omitempty"`
+	MotherAccountAlias               string `json:"motherAccountAlias,omitempty"`
+	ReconciliationEnabled            bool   `json:"reconciliationEnabled,omitempty"`
+	ReconciliationReceivablesAccount string `json:"reconciliationReceivablesAccount,omitempty"`
+	MatcherContextID                 string `json:"matcherContextId,omitempty"`
 }
 
 // CreatePluggyConnectionUseCase binds a Pluggy Item/Account to a Midaz Account Alias.
 type CreatePluggyConnectionUseCase struct {
 	pluggyClient *pluggy.PluggyClient
 	storageRepo  domain.StorageRepository
+	cfg          *bootstrap.Config
 }
 
 // NewCreatePluggyConnectionUseCase creates a new connection registration command.
 func NewCreatePluggyConnectionUseCase(
 	pluggyClient *pluggy.PluggyClient,
 	storageRepo domain.StorageRepository,
+	cfg ...*bootstrap.Config,
 ) *CreatePluggyConnectionUseCase {
+	var config *bootstrap.Config
+	if len(cfg) > 0 {
+		config = cfg[0]
+	}
 	return &CreatePluggyConnectionUseCase{
 		pluggyClient: pluggyClient,
 		storageRepo:  storageRepo,
+		cfg:          config,
 	}
 }
 
@@ -68,17 +82,28 @@ func (uc *CreatePluggyConnectionUseCase) Execute(ctx context.Context, cmd *Creat
 		bankName = matchedAccount.BrandName
 	}
 
+	clearingAlias := cmd.ClearingAccountAlias
+	if clearingAlias == "" && uc.cfg != nil && uc.cfg.MidazClearingAccountAlias != "" {
+		clearingAlias = uc.cfg.MidazClearingAccountAlias
+	}
+
 	// 3. Create domain connection
 	conn := &domain.BankConnection{
-		ID:                uuid.New().String(),
-		Provider:          "pluggy",
-		BankCompe:         bankName,
-		BankAccountID:     cmd.AccountID,
-		MidazAccountAlias: cmd.MidazAccountAlias,
-		ConsentID:         cmd.ItemID,
-		Status:            string(item.Status),
-		CreatedAt:         time.Now().UTC(),
-		UpdatedAt:         time.Now().UTC(),
+		ID:                               uuid.New().String(),
+		Provider:                         "pluggy",
+		BankCompe:                        bankName,
+		BankAccountID:                    cmd.AccountID,
+		MidazAccountAlias:                cmd.MidazAccountAlias,
+		MotherAccountID:                  cmd.MotherAccountID,
+		MotherAccountAlias:               cmd.MotherAccountAlias,
+		ReconciliationEnabled:            cmd.ReconciliationEnabled,
+		ReconciliationReceivablesAccount: cmd.ReconciliationReceivablesAccount,
+		MatcherContextID:                 cmd.MatcherContextID,
+		ClearingAccountAlias:             clearingAlias,
+		ConsentID:                         cmd.ItemID,
+		Status:                           string(item.Status),
+		CreatedAt:                        time.Now().UTC(),
+		UpdatedAt:                        time.Now().UTC(),
 	}
 
 	if uc.storageRepo != nil {

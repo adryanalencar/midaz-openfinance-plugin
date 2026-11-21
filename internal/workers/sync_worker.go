@@ -141,7 +141,7 @@ func (w *SyncWorker) syncConnection(ctx context.Context, conn domain.BankConnect
 			}
 
 			// 2. Post balanced double-entry transaction to Midaz
-			postErr := w.midazClient.PostDoubleEntryTransaction(ctx, tx, conn.MidazAccountAlias)
+			postErr := w.midazClient.PostDoubleEntryTransaction(ctx, tx, conn.MidazAccountAlias, conn.ClearingAccountAlias)
 			if postErr != nil {
 				w.logger.Errorf("Failed to post transaction %s to Midaz: %v", tx.ID, postErr)
 				continue

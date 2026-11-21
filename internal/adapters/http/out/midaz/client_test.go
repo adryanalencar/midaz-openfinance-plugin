@@ -211,3 +211,69 @@ func TestPostDoubleEntryTransactionIdempotentConflict(t *testing.T) {
 	// Must NOT return error, because 409 means already ingested in Midaz
 	assert.NoError(t, err)
 }
+
+func TestPostDoubleEntryTransactionCustomClearing(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var payload map[string]any
+		err := json.NewDecoder(r.Body).Decode(&payload)
+		assert.NoError(t, err)
+
+		send := payload["send"].(map[string]any)
+		source := send["source"].(map[string]any)
+		fromList := source["from"].([]any)
+		from := fromList[0].(map[string]any)
+		assert.Equal(t, "@external/BRL:custom_clearing", from["accountAlias"])
+
+		w.WriteHeader(http.StatusCreated)
+	}))
+	defer mockServer.Close()
+
+	cfg := &bootstrap.Config{
+		MidazTransactionURL:       mockServer.URL,
+		MidazOrganizationID:       "org-1",
+		MidazLedgerID:             "led-1",
+		MidazClearingAccountAlias: "@external/BRL:openfinance",
+	}
+
+	amount, _ := decimal.NewFromString("100.00")
+	tx := domain.BankTransaction{
+		ID:              "TX-CUSTOM-01",
+		Amount:          amount,
+		CreditDebitType: domain.CreditDebitCredit,
+		BookingDateTime: time.Now(),
+	}
+
+	client := NewMidazClient(cfg)
+	err := client.PostDoubleEntryTransaction(context.Background(), tx, "checking_acc", "@external/BRL:custom_clearing")
+	assert.NoError(t, err)
+}
+
+func TestListExternalAccounts(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		resp := map[string]any{
+			"items": []map[string]any{
+				{"id": "acc-1", "alias": "@external/BRL:universal", "name": "Universal Clearing", "assetCode": "BRL", "type": "external"},
+				{"id": "acc-2", "alias": "@checking/001", "name": "Checking Account", "assetCode": "BRL", "type": "deposit"},
+				{"id": "acc-3", "alias": "@external/BRL:openfinance", "name": "Open Finance Clearing", "assetCode": "BRL", "type": "external"},
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer mockServer.Close()
+
+	cfg := &bootstrap.Config{
+		MidazOnboardingURL:  mockServer.URL,
+		MidazOrganizationID: "org-1",
+		MidazLedgerID:       "led-1",
+	}
+
+	client := NewMidazClient(cfg)
+	accounts, err := client.ListExternalAccounts(context.Background())
+	assert.NoError(t, err)
+	assert.Len(t, accounts, 2)
+	assert.Equal(t, "@external/BRL:universal", accounts[0].Alias)
+	assert.Equal(t, "@external/BRL:openfinance", accounts[1].Alias)
+}
+

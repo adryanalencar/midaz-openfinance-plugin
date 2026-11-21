@@ -91,18 +91,19 @@ func main() {
 		pluggyClient, err := pluggy.NewPluggyClient(cfg)
 		if err == nil {
 			handlePluggyWebhookCmd := command.NewHandlePluggyWebhookUseCase(cfg, pluggyClient, storageRepo, midazClient, logger)
-			createPluggyConnCmd := command.NewCreatePluggyConnectionUseCase(pluggyClient, storageRepo)
+			createPluggyConnCmd := command.NewCreatePluggyConnectionUseCase(pluggyClient, storageRepo, cfg)
 			webhookHandler = httpIn.NewWebhookHandler(handlePluggyWebhookCmd)
 			pluggyHandler = httpIn.NewPluggyHandler(pluggyClient, createPluggyConnCmd)
 			logger.Infof("Initialized Pluggy Connect & Webhook handlers")
 		}
 	}
 
-	// 11. Setup HTTP In Adapters (Manifest + Sync + Webhooks + Pluggy + Internal + Health)
+	// 11. Setup HTTP In Adapters (Manifest + Sync + Webhooks + Pluggy + Internal + External + Health)
 	manifestHandler := httpIn.NewManifestHandler(cfg)
 	syncHandler := httpIn.NewSyncHandler(syncTransactionsCmd, getSyncStatusQuery)
 	internalHandler := httpIn.NewInternalHandler(storageRepo)
-	router := httpIn.NewRouter(manifestHandler, syncHandler, webhookHandler, pluggyHandler, internalHandler)
+	externalHandler := httpIn.NewExternalHandler(midazClient)
+	router := httpIn.NewRouter(manifestHandler, syncHandler, webhookHandler, pluggyHandler, internalHandler, externalHandler)
 
 	// 11. Start Service with graceful shutdown
 	service := &bootstrap.Service{

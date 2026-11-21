@@ -123,7 +123,7 @@ func (uc *HandlePluggyWebhookUseCase) handleTransactionsCreated(ctx context.Cont
 		}
 
 		midazTxCode := fmt.Sprintf("OFP-PLG-%s", tx.ID)
-		if err := uc.midazClient.PostDoubleEntryTransaction(ctx, tx, conn.MidazAccountAlias); err != nil {
+		if err := uc.midazClient.PostDoubleEntryTransaction(ctx, tx, conn.MidazAccountAlias, conn.ClearingAccountAlias); err != nil {
 			uc.logger.Errorf("Failed to post double-entry transaction %s to Midaz: %v", tx.ID, err)
 			continue
 		}
