@@ -37,9 +37,9 @@ func (r *Repository) SaveConnection(ctx context.Context, conn *domain.BankConnec
 		INSERT INTO bank_connections (
 			id, provider, bank_compe, bank_account_id, midaz_account_alias,
 			mother_account_id, mother_account_alias, reconciliation_enabled,
-			reconciliation_receivables_account, matcher_context_id,
+			reconciliation_receivables_account, matcher_context_id, clearing_account_alias,
 			consent_id, access_token, refresh_token, token_expires_at, status, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		ON CONFLICT (id) DO UPDATE SET
 			access_token = EXCLUDED.access_token,
 			refresh_token = EXCLUDED.refresh_token,
@@ -48,13 +48,14 @@ func (r *Repository) SaveConnection(ctx context.Context, conn *domain.BankConnec
 			reconciliation_enabled = EXCLUDED.reconciliation_enabled,
 			reconciliation_receivables_account = EXCLUDED.reconciliation_receivables_account,
 			matcher_context_id = EXCLUDED.matcher_context_id,
+			clearing_account_alias = EXCLUDED.clearing_account_alias,
 			updated_at = EXCLUDED.updated_at;
 	`
 
 	_, err := r.db.ExecContext(ctx, query,
 		conn.ID, conn.Provider, conn.BankCompe, conn.BankAccountID, conn.MidazAccountAlias,
 		conn.MotherAccountID, conn.MotherAccountAlias, conn.ReconciliationEnabled,
-		conn.ReconciliationReceivablesAccount, conn.MatcherContextID,
+		conn.ReconciliationReceivablesAccount, conn.MatcherContextID, conn.ClearingAccountAlias,
 		conn.ConsentID, conn.AccessToken, conn.RefreshToken, conn.TokenExpiresAt, conn.Status,
 		conn.CreatedAt, conn.UpdatedAt,
 	)
@@ -66,18 +67,18 @@ func (r *Repository) FindConnectionByID(ctx context.Context, id string) (*domain
 	query := `
 		SELECT id, provider, bank_compe, bank_account_id, midaz_account_alias,
 		       mother_account_id, mother_account_alias, reconciliation_enabled,
-		       reconciliation_receivables_account, matcher_context_id,
+		       reconciliation_receivables_account, matcher_context_id, clearing_account_alias,
 		       consent_id, access_token, refresh_token, token_expires_at, status, created_at, updated_at
 		FROM bank_connections
 		WHERE id = $1;
 	`
 
 	var conn domain.BankConnection
-	var motherID, motherAlias, recAccount, matcherCtx sql.NullString
+	var motherID, motherAlias, recAccount, matcherCtx, clearingAlias sql.NullString
 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&conn.ID, &conn.Provider, &conn.BankCompe, &conn.BankAccountID, &conn.MidazAccountAlias,
-		&motherID, &motherAlias, &conn.ReconciliationEnabled, &recAccount, &matcherCtx,
+		&motherID, &motherAlias, &conn.ReconciliationEnabled, &recAccount, &matcherCtx, &clearingAlias,
 		&conn.ConsentID, &conn.AccessToken, &conn.RefreshToken, &conn.TokenExpiresAt, &conn.Status,
 		&conn.CreatedAt, &conn.UpdatedAt,
 	)
@@ -99,6 +100,9 @@ func (r *Repository) FindConnectionByID(ctx context.Context, id string) (*domain
 	}
 	if matcherCtx.Valid {
 		conn.MatcherContextID = matcherCtx.String
+	}
+	if clearingAlias.Valid {
+		conn.ClearingAccountAlias = clearingAlias.String
 	}
 
 	return &conn, nil
@@ -109,7 +113,7 @@ func (r *Repository) FindConnectionByAccountID(ctx context.Context, accountID st
 	query := `
 		SELECT id, provider, bank_compe, bank_account_id, midaz_account_alias,
 		       mother_account_id, mother_account_alias, reconciliation_enabled,
-		       reconciliation_receivables_account, matcher_context_id,
+		       reconciliation_receivables_account, matcher_context_id, clearing_account_alias,
 		       consent_id, access_token, refresh_token, token_expires_at, status, created_at, updated_at
 		FROM bank_connections
 		WHERE bank_account_id = $1 OR id = $1
@@ -117,11 +121,11 @@ func (r *Repository) FindConnectionByAccountID(ctx context.Context, accountID st
 	`
 
 	var conn domain.BankConnection
-	var motherID, motherAlias, recAccount, matcherCtx sql.NullString
+	var motherID, motherAlias, recAccount, matcherCtx, clearingAlias sql.NullString
 
 	err := r.db.QueryRowContext(ctx, query, accountID).Scan(
 		&conn.ID, &conn.Provider, &conn.BankCompe, &conn.BankAccountID, &conn.MidazAccountAlias,
-		&motherID, &motherAlias, &conn.ReconciliationEnabled, &recAccount, &matcherCtx,
+		&motherID, &motherAlias, &conn.ReconciliationEnabled, &recAccount, &matcherCtx, &clearingAlias,
 		&conn.ConsentID, &conn.AccessToken, &conn.RefreshToken, &conn.TokenExpiresAt, &conn.Status,
 		&conn.CreatedAt, &conn.UpdatedAt,
 	)
@@ -143,6 +147,9 @@ func (r *Repository) FindConnectionByAccountID(ctx context.Context, accountID st
 	}
 	if matcherCtx.Valid {
 		conn.MatcherContextID = matcherCtx.String
+	}
+	if clearingAlias.Valid {
+		conn.ClearingAccountAlias = clearingAlias.String
 	}
 
 	return &conn, nil
@@ -164,7 +171,7 @@ func (r *Repository) ListActiveConnections(ctx context.Context) ([]domain.BankCo
 	query := `
 		SELECT id, provider, bank_compe, bank_account_id, midaz_account_alias,
 		       mother_account_id, mother_account_alias, reconciliation_enabled,
-		       reconciliation_receivables_account, matcher_context_id,
+		       reconciliation_receivables_account, matcher_context_id, clearing_account_alias,
 		       consent_id, access_token, refresh_token, token_expires_at, status, created_at, updated_at
 		FROM bank_connections
 		WHERE status = 'ACTIVE';
@@ -179,11 +186,11 @@ func (r *Repository) ListActiveConnections(ctx context.Context) ([]domain.BankCo
 	var connections []domain.BankConnection
 	for rows.Next() {
 		var conn domain.BankConnection
-		var motherID, motherAlias, recAccount, matcherCtx sql.NullString
+		var motherID, motherAlias, recAccount, matcherCtx, clearingAlias sql.NullString
 
 		if err := rows.Scan(
 			&conn.ID, &conn.Provider, &conn.BankCompe, &conn.BankAccountID, &conn.MidazAccountAlias,
-			&motherID, &motherAlias, &conn.ReconciliationEnabled, &recAccount, &matcherCtx,
+			&motherID, &motherAlias, &conn.ReconciliationEnabled, &recAccount, &matcherCtx, &clearingAlias,
 			&conn.ConsentID, &conn.AccessToken, &conn.RefreshToken, &conn.TokenExpiresAt, &conn.Status,
 			&conn.CreatedAt, &conn.UpdatedAt,
 		); err != nil {
@@ -201,6 +208,9 @@ func (r *Repository) ListActiveConnections(ctx context.Context) ([]domain.BankCo
 		}
 		if matcherCtx.Valid {
 			conn.MatcherContextID = matcherCtx.String
+		}
+		if clearingAlias.Valid {
+			conn.ClearingAccountAlias = clearingAlias.String
 		}
 
 		connections = append(connections, conn)

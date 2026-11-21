@@ -20,6 +20,7 @@ type BankConnection struct {
 	ReconciliationEnabled             bool      `json:"reconciliationEnabled"`
 	ReconciliationReceivablesAccount  string    `json:"reconciliationReceivablesAccount,omitempty"`
 	MatcherContextID                  string    `json:"matcherContextId,omitempty"`
+	ClearingAccountAlias              string    `json:"clearingAccountAlias,omitempty"`
 	ConsentID                         string    `json:"consentId"`
 	AccessToken                       string    `json:"accessToken"`
 	RefreshToken                      string    `json:"refreshToken"`
@@ -70,3 +71,13 @@ type StorageRepository interface {
 	IsTransactionProcessed(ctx context.Context, bankTxID string) (bool, error)
 	RecordProcessedTransaction(ctx context.Context, tx *ProcessedTransaction) error
 }
+
+// ExternalAccount represents an external clearing account in Midaz.
+type ExternalAccount struct {
+	ID        string `json:"id"`
+	Alias     string `json:"alias"`
+	Name      string `json:"name"`
+	AssetCode string `json:"assetCode"`
+	Type      string `json:"type"`
+}
+

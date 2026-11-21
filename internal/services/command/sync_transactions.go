@@ -11,11 +11,12 @@ import (
 
 // SyncTransactionsInput defines the arguments for running a synchronization cycle.
 type SyncTransactionsInput struct {
-	BankAccountID          string
+	BankAccountID           string
 	TargetMidazAccountAlias string
-	FromDate               time.Time
-	ToDate                 time.Time
-	PageSize               int
+	ClearingAccountAlias    string
+	FromDate                time.Time
+	ToDate                  time.Time
+	PageSize                int
 }
 
 // SyncResult captures the statistics of a completed sync cycle.
@@ -66,7 +67,7 @@ func (uc *SyncTransactionsUseCase) Execute(ctx context.Context, input SyncTransa
 		result.RecordsFetched += len(page.Transactions)
 
 		for _, tx := range page.Transactions {
-			postErr := uc.midazClient.PostDoubleEntryTransaction(ctx, tx, input.TargetMidazAccountAlias)
+			postErr := uc.midazClient.PostDoubleEntryTransaction(ctx, tx, input.TargetMidazAccountAlias, input.ClearingAccountAlias)
 			if postErr != nil {
 				result.RecordsFailed++
 			} else {

@@ -467,6 +467,35 @@ curl http://localhost:8085/health
 | `POST` | `/webhooks/pluggy` | Ingestion endpoint receiving Pluggy event webhooks. |
 
 #### 1. Generate Connect Token
+#### 1. Query External Clearing Accounts
+Operators and frontends can query Midaz in real-time to select the external clearing origin/destination account:
+```bash
+curl -X GET http://localhost:8085/v1/external-accounts
+```
+Response:
+```json
+{
+  "items": [
+    {
+      "id": "01948df2-abcd-7000-8000-000000000001",
+      "alias": "@external/BRL:openfinance",
+      "name": "Open Finance External Clearing",
+      "assetCode": "BRL",
+      "type": "external"
+    },
+    {
+      "id": "01948df2-abcd-7000-8000-000000000002",
+      "alias": "@external/BRL:universal",
+      "name": "Universal Clearing",
+      "assetCode": "BRL",
+      "type": "external"
+    }
+  ],
+  "count": 2
+}
+```
+
+#### 2. Generate Pluggy Connect Token
 ```bash
 curl -X POST http://localhost:8085/v1/connect-token/pluggy \
   -H "Content-Type: application/json" \
@@ -479,15 +508,16 @@ Response:
 }
 ```
 
-#### 2. Register Connection & Account Mapping
-After the user completes the Pluggy Widget on the frontend, register the connection:
+#### 3. Register Connection & Account Mapping
+After the user completes the Pluggy Widget on the frontend, register the connection with optional custom clearing account selection:
 ```bash
 curl -X POST http://localhost:8085/v1/connections/pluggy \
   -H "Content-Type: application/json" \
   -d '{
     "itemId": "e6a0d4b8-2bc1-4e89-8d77-d3527b13e9a1",
     "accountId": "a3b9f4e2-9d8a-4c7b-8e1f-2a3b4c5d6e7f",
-    "midazAccountAlias": "@company/itau_checking"
+    "midazAccountAlias": "@company/itau_checking",
+    "clearingAccountAlias": "@external/BRL:universal"
   }'
 ```
 Response:
@@ -498,11 +528,12 @@ Response:
   "itemId": "e6a0d4b8-2bc1-4e89-8d77-d3527b13e9a1",
   "accountId": "a3b9f4e2-9d8a-4c7b-8e1f-2a3b4c5d6e7f",
   "midazAccountAlias": "@company/itau_checking",
+  "clearingAccountAlias": "@external/BRL:universal",
   "bankCompe": "341"
 }
 ```
 
-#### 3. Real-Time Webhook (`POST /webhooks/pluggy`)
+#### 4. Real-Time Webhook (`POST /webhooks/pluggy`)
 Pluggy dispatches events such as:
 - `transactions/created`: Pulls `createdTransactionsLink` cursor, converts amounts to scale 2, and creates double-entry transactions in Midaz.
 - `item/updated`, `item/error`, `item/waiting_user_input`, `item/deleted`: Updates connection lifecycle status in PostgreSQL.

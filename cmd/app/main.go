@@ -98,11 +98,12 @@ func main() {
 		}
 	}
 
-	// 11. Setup HTTP In Adapters (Manifest + Sync + Webhooks + Pluggy + Internal + Health)
+	// 11. Setup HTTP In Adapters (Manifest + Sync + Webhooks + Pluggy + Internal + External + Health)
 	manifestHandler := httpIn.NewManifestHandler(cfg)
 	syncHandler := httpIn.NewSyncHandler(syncTransactionsCmd, getSyncStatusQuery)
 	internalHandler := httpIn.NewInternalHandler(storageRepo)
-	router := httpIn.NewRouter(manifestHandler, syncHandler, webhookHandler, pluggyHandler, internalHandler)
+	externalHandler := httpIn.NewExternalHandler(midazClient)
+	router := httpIn.NewRouter(manifestHandler, syncHandler, webhookHandler, pluggyHandler, internalHandler, externalHandler)
 
 	// 11. Start Service with graceful shutdown
 	service := &bootstrap.Service{

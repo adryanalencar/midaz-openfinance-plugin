@@ -7,7 +7,7 @@ import (
 )
 
 // NewRouter registers all HTTP routes for the Open Finance Plugin.
-func NewRouter(mh *ManifestHandler, sh *SyncHandler, wh *WebhookHandler, ph *PluggyHandler, ih *InternalHandler) *fiber.App {
+func NewRouter(mh *ManifestHandler, sh *SyncHandler, wh *WebhookHandler, ph *PluggyHandler, ih *InternalHandler, eh ...*ExternalHandler) *fiber.App {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 	})
@@ -38,6 +38,12 @@ func NewRouter(mh *ManifestHandler, sh *SyncHandler, wh *WebhookHandler, ph *Plu
 	v1 := app.Group("/v1")
 	v1.Post("/sync", sh.TriggerSync)
 	v1.Get("/sync/status", sh.GetStatus)
+
+	// External clearing accounts endpoints
+	if len(eh) > 0 && eh[0] != nil {
+		v1.Get("/external-accounts", eh[0].ListExternalAccounts)
+		v1.Get("/accounts/external", eh[0].ListExternalAccounts)
+	}
 
 	// Pluggy Connect endpoints
 	if ph != nil {

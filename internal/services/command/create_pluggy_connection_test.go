@@ -58,9 +58,10 @@ func TestCreatePluggyConnection_Success(t *testing.T) {
 	uc := NewCreatePluggyConnectionUseCase(pluggyClient, storage)
 
 	conn, err := uc.Execute(context.Background(), &CreatePluggyConnectionCommand{
-		ItemID:            "item-pluggy-01",
-		AccountID:         "acc-pluggy-01",
-		MidazAccountAlias: "bb_operational_acc",
+		ItemID:               "item-pluggy-01",
+		AccountID:            "acc-pluggy-01",
+		MidazAccountAlias:    "bb_operational_acc",
+		ClearingAccountAlias: "@external/BRL:custom_clearing",
 	})
 
 	assert.NoError(t, err)
@@ -69,6 +70,7 @@ func TestCreatePluggyConnection_Success(t *testing.T) {
 	assert.Equal(t, "Banco do Brasil", conn.BankCompe)
 	assert.Equal(t, "acc-pluggy-01", conn.BankAccountID)
 	assert.Equal(t, "bb_operational_acc", conn.MidazAccountAlias)
+	assert.Equal(t, "@external/BRL:custom_clearing", conn.ClearingAccountAlias)
 	assert.Equal(t, "UPDATED", conn.Status)
 
 	savedConn, err := storage.FindConnectionByID(context.Background(), conn.ID)

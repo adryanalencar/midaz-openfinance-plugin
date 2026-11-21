@@ -12,9 +12,15 @@ import (
 
 // CreatePluggyConnectionCommand contains inputs to register a newly connected Pluggy account.
 type CreatePluggyConnectionCommand struct {
-	ItemID            string `json:"itemId"`
-	AccountID         string `json:"accountId"`
-	MidazAccountAlias string `json:"midazAccountAlias"`
+	ItemID                           string `json:"itemId"`
+	AccountID                        string `json:"accountId"`
+	MidazAccountAlias                string `json:"midazAccountAlias"`
+	ClearingAccountAlias             string `json:"clearingAccountAlias,omitempty"`
+	MotherAccountID                  string `json:"motherAccountId,omitempty"`
+	MotherAccountAlias               string `json:"motherAccountAlias,omitempty"`
+	ReconciliationEnabled            bool   `json:"reconciliationEnabled,omitempty"`
+	ReconciliationReceivablesAccount string `json:"reconciliationReceivablesAccount,omitempty"`
+	MatcherContextID                 string `json:"matcherContextId,omitempty"`
 }
 
 // CreatePluggyConnectionUseCase binds a Pluggy Item/Account to a Midaz Account Alias.
@@ -70,15 +76,21 @@ func (uc *CreatePluggyConnectionUseCase) Execute(ctx context.Context, cmd *Creat
 
 	// 3. Create domain connection
 	conn := &domain.BankConnection{
-		ID:                uuid.New().String(),
-		Provider:          "pluggy",
-		BankCompe:         bankName,
-		BankAccountID:     cmd.AccountID,
-		MidazAccountAlias: cmd.MidazAccountAlias,
-		ConsentID:         cmd.ItemID,
-		Status:            string(item.Status),
-		CreatedAt:         time.Now().UTC(),
-		UpdatedAt:         time.Now().UTC(),
+		ID:                               uuid.New().String(),
+		Provider:                         "pluggy",
+		BankCompe:                        bankName,
+		BankAccountID:                    cmd.AccountID,
+		MidazAccountAlias:                cmd.MidazAccountAlias,
+		MotherAccountID:                  cmd.MotherAccountID,
+		MotherAccountAlias:               cmd.MotherAccountAlias,
+		ReconciliationEnabled:            cmd.ReconciliationEnabled,
+		ReconciliationReceivablesAccount: cmd.ReconciliationReceivablesAccount,
+		MatcherContextID:                 cmd.MatcherContextID,
+		ClearingAccountAlias:             cmd.ClearingAccountAlias,
+		ConsentID:                         cmd.ItemID,
+		Status:                           string(item.Status),
+		CreatedAt:                        time.Now().UTC(),
+		UpdatedAt:                        time.Now().UTC(),
 	}
 
 	if uc.storageRepo != nil {
