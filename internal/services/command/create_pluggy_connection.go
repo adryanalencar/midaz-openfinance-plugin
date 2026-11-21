@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/adapters/providers/pluggy"
+	"github.com/LerianStudio/midaz-plugin-openfinance/internal/bootstrap"
 	"github.com/LerianStudio/midaz-plugin-openfinance/internal/domain"
 	"github.com/google/uuid"
 )
@@ -27,16 +28,23 @@ type CreatePluggyConnectionCommand struct {
 type CreatePluggyConnectionUseCase struct {
 	pluggyClient *pluggy.PluggyClient
 	storageRepo  domain.StorageRepository
+	cfg          *bootstrap.Config
 }
 
 // NewCreatePluggyConnectionUseCase creates a new connection registration command.
 func NewCreatePluggyConnectionUseCase(
 	pluggyClient *pluggy.PluggyClient,
 	storageRepo domain.StorageRepository,
+	cfg ...*bootstrap.Config,
 ) *CreatePluggyConnectionUseCase {
+	var config *bootstrap.Config
+	if len(cfg) > 0 {
+		config = cfg[0]
+	}
 	return &CreatePluggyConnectionUseCase{
 		pluggyClient: pluggyClient,
 		storageRepo:  storageRepo,
+		cfg:          config,
 	}
 }
 
@@ -74,6 +82,11 @@ func (uc *CreatePluggyConnectionUseCase) Execute(ctx context.Context, cmd *Creat
 		bankName = matchedAccount.BrandName
 	}
 
+	clearingAlias := cmd.ClearingAccountAlias
+	if clearingAlias == "" && uc.cfg != nil && uc.cfg.MidazClearingAccountAlias != "" {
+		clearingAlias = uc.cfg.MidazClearingAccountAlias
+	}
+
 	// 3. Create domain connection
 	conn := &domain.BankConnection{
 		ID:                               uuid.New().String(),
@@ -86,7 +99,7 @@ func (uc *CreatePluggyConnectionUseCase) Execute(ctx context.Context, cmd *Creat
 		ReconciliationEnabled:            cmd.ReconciliationEnabled,
 		ReconciliationReceivablesAccount: cmd.ReconciliationReceivablesAccount,
 		MatcherContextID:                 cmd.MatcherContextID,
-		ClearingAccountAlias:             cmd.ClearingAccountAlias,
+		ClearingAccountAlias:             clearingAlias,
 		ConsentID:                         cmd.ItemID,
 		Status:                           string(item.Status),
 		CreatedAt:                        time.Now().UTC(),

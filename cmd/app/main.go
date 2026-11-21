@@ -91,7 +91,7 @@ func main() {
 		pluggyClient, err := pluggy.NewPluggyClient(cfg)
 		if err == nil {
 			handlePluggyWebhookCmd := command.NewHandlePluggyWebhookUseCase(cfg, pluggyClient, storageRepo, midazClient, logger)
-			createPluggyConnCmd := command.NewCreatePluggyConnectionUseCase(pluggyClient, storageRepo)
+			createPluggyConnCmd := command.NewCreatePluggyConnectionUseCase(pluggyClient, storageRepo, cfg)
 			webhookHandler = httpIn.NewWebhookHandler(handlePluggyWebhookCmd)
 			pluggyHandler = httpIn.NewPluggyHandler(pluggyClient, createPluggyConnCmd)
 			logger.Infof("Initialized Pluggy Connect & Webhook handlers")
