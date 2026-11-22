@@ -74,10 +74,10 @@ export default function AccountsView() {
               mb: 0.5
             }}
           >
-            Connected Bank Accounts
+            Contas Bancárias Conectadas
           </Typography>
           <Typography variant="body2" sx={{ color: '#919EAB' }}>
-            Pluggy Open Finance connectors &amp; Midaz checking ledger accounts
+            Contas correntes integradas via Open Finance com atualização contínua de saldos e extratos
           </Typography>
         </Box>
 
@@ -92,19 +92,28 @@ export default function AccountsView() {
             '&:hover': { bgcolor: '#000000' }
           }}
         >
-          Connect via Pluggy
+          Conectar Nova Conta Bancária
         </Button>
       </Stack>
 
-      {/* Grid of Bank Accounts */}
+      {/* Grid of Bank Accounts (3 cards per row on desktop/laptop) */}
       <Grid container spacing={3}>
         {accounts.map((acc) => {
           const isSyncing = syncingId === acc.id;
           const isRecentlySynced = syncedFeedback === acc.id;
 
           return (
-            <Grid item xs={12} md={6} key={acc.id}>
-              <BentoCard variant="white" sx={{ p: 3.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={acc.id}>
+              <BentoCard
+                variant="white"
+                sx={{
+                  p: 3.5,
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}
+              >
                 <Box>
                   <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
@@ -125,58 +134,70 @@ export default function AccountsView() {
                         <IconBuildingBank size={22} />
                       </Box>
                       <Box>
-                        <Typography sx={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: '16px', color: '#1D1D1D' }}>
+                        <Typography
+                          sx={{
+                            fontFamily: "'Plus Jakarta Sans', sans-serif",
+                            fontWeight: 700,
+                            fontSize: '16px',
+                            color: '#1D1D1D'
+                          }}
+                        >
                           {acc.institution_name}
                         </Typography>
                         <Typography sx={{ fontSize: '11px', color: '#919EAB' }}>
-                          Branch: {acc.branch_number} • Account: {acc.account_number}
+                          Agência: {acc.branch_number} • Conta: {acc.account_number}
                         </Typography>
                       </Box>
                     </Stack>
                     <StatusBadge variant="lime">
-                      {acc.status}
+                      Conectado
                     </StatusBadge>
                   </Stack>
 
-                  {/* Midaz Double-Entry Mapping Box */}
+                  {/* Account Information Details */}
                   <Box sx={{ p: 2, borderRadius: '14px', bgcolor: '#F3F3F3', mb: 2.5 }}>
-                    <Stack spacing={1}>
+                    <Stack spacing={1.2}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Stack direction="row" spacing={1} alignItems="center">
                           <IconWallet size={15} color="#666666" />
-                          <Typography sx={{ fontSize: '12px', color: '#666666' }}>Midaz Ledger Alias:</Typography>
+                          <Typography sx={{ fontSize: '12px', color: '#666666' }}>Modalidade:</Typography>
                         </Stack>
                         <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#1D1D1D' }}>
-                          {acc.midaz_account_alias}
-                        </Typography>
-                      </Box>
-
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <IconBuildingBank size={15} color="#666666" />
-                          <Typography sx={{ fontSize: '12px', color: '#666666' }}>Clearing Account:</Typography>
-                        </Stack>
-                        <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#15803d' }}>
-                          {acc.clearing_account_alias}
+                          Conta Corrente PJ
                         </Typography>
                       </Box>
 
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Stack direction="row" spacing={1} alignItems="center">
                           <IconShieldCheck size={15} color="#666666" />
-                          <Typography sx={{ fontSize: '12px', color: '#666666' }}>Reconciliation Flag:</Typography>
+                          <Typography sx={{ fontSize: '12px', color: '#666666' }}>Conciliação de Cartão:</Typography>
                         </Stack>
                         <StatusBadge variant={acc.reconciliation_enabled ? 'lime' : 'neutral'}>
-                          {acc.reconciliation_enabled ? 'reconciliation.enabled == true' : 'Direct Deposit'}
+                          {acc.reconciliation_enabled ? 'Automática Ativa' : 'Depósito Direto'}
                         </StatusBadge>
+                      </Box>
+
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <IconBuildingBank size={15} color="#666666" />
+                          <Typography sx={{ fontSize: '12px', color: '#666666' }}>Conexão:</Typography>
+                        </Stack>
+                        <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#15803d' }}>
+                          Open Finance Brasil
+                        </Typography>
                       </Box>
                     </Stack>
                   </Box>
                 </Box>
 
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ pt: 2, borderTop: '1px solid #E8E8E8' }}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  sx={{ pt: 2, borderTop: '1px solid #E8E8E8' }}
+                >
                   <Box>
-                    <Typography sx={{ fontSize: '11px', color: '#919EAB' }}>Current Liquid Balance</Typography>
+                    <Typography sx={{ fontSize: '11px', color: '#919EAB' }}>Saldo Disponível</Typography>
                     <Typography sx={{ fontSize: '18px', fontWeight: 700, color: '#1D1D1D' }}>
                       {formatCurrency(acc.balance)}
                     </Typography>
@@ -207,7 +228,7 @@ export default function AccountsView() {
                       '&:hover': { bgcolor: '#F3F3F3' }
                     }}
                   >
-                    {isSyncing ? 'Syncing...' : isRecentlySynced ? 'Synced!' : 'Sync Now'}
+                    {isSyncing ? 'Atualizando...' : isRecentlySynced ? 'Atualizado!' : 'Atualizar Extrato'}
                   </Button>
                 </Stack>
               </BentoCard>

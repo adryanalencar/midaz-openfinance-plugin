@@ -26,8 +26,7 @@ export default function TransactionsView() {
 
   const filtered = transactions.filter((t) =>
     t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.bank.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.account_alias.toLowerCase().includes(searchQuery.toLowerCase())
+    t.bank.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const formatCurrency = (val) =>
@@ -54,16 +53,16 @@ export default function TransactionsView() {
               mb: 0.5
             }}
           >
-            Bank Statement Transactions
+            Extrato Bancário Consolidado
           </Typography>
           <Typography variant="body2" sx={{ color: '#919EAB' }}>
-            Ingested statement lines &amp; selective ledger routing audit
+            Histórico de movimentações sincronizadas e conciliação com recebíveis de cartão
           </Typography>
         </Box>
 
         <TextField
           size="small"
-          placeholder="Search statement..."
+          placeholder="Buscar no extrato..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
@@ -72,7 +71,7 @@ export default function TransactionsView() {
                 <IconSearch size={16} color="#919EAB" />
               </InputAdornment>
             ),
-            sx: { borderRadius: '9999px', bgcolor: '#FFFFFF', fontSize: '12px', width: 240 }
+            sx: { borderRadius: '9999px', bgcolor: '#FFFFFF', fontSize: '12px', width: 260 }
           }}
         />
       </Stack>
@@ -123,7 +122,7 @@ export default function TransactionsView() {
                     {tx.description}
                   </Typography>
                   <Typography sx={{ fontSize: '11px', color: '#919EAB', mt: 0.25 }}>
-                    {tx.bank} • {tx.account_alias} • {tx.booking_date}
+                    {tx.bank} • {tx.booking_date}
                   </Typography>
                 </Box>
               </Stack>
@@ -139,13 +138,13 @@ export default function TransactionsView() {
                   {formatCurrency(tx.amount)}
                 </Typography>
                 <Typography sx={{ fontSize: '11px', color: '#919EAB' }}>
-                  {tx.type}
+                  {tx.type === 'CREDIT' ? 'Crédito em Conta' : 'Débito'}
                 </Typography>
               </Box>
 
               <Box sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}>
                 <StatusBadge variant={tx.reconciliation_flag ? 'lime' : 'neutral'}>
-                  {tx.reconciliation_flag ? 'Routed to Matcher 6' : 'Direct Midaz Posting'}
+                  {tx.reconciliation_flag ? 'Venda de Cartão Conciliada' : 'Depósito em Conta Corrente'}
                 </StatusBadge>
               </Box>
             </Box>

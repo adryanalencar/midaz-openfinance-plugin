@@ -28,6 +28,12 @@ export default function ConsentsView() {
     openfinanceApi.getConsents().then(setConsents);
   }, []);
 
+  const permissionLabels = {
+    ACCOUNTS_READ: 'Consulta de Dados da Conta',
+    BALANCES_READ: 'Saldo Consolidado em Tempo Real',
+    TRANSACTIONS_READ: 'Extrato e Movimentações Financeiras'
+  };
+
   return (
     <Box sx={{ pb: 6 }}>
       {/* Header */}
@@ -49,67 +55,71 @@ export default function ConsentsView() {
               mb: 0.5
             }}
           >
-            Open Finance Consents
+            Autorizações Open Finance
           </Typography>
           <Typography variant="body2" sx={{ color: '#919EAB' }}>
-            Open Finance Brasil consent lifecycle &amp; automatic renewal triggers
+            Consentimentos bancários regulamentados pelo Banco Central para leitura de extratos
           </Typography>
         </Box>
 
         <StatusBadge variant="lime" icon={<IconShieldCheck size={14} />}>
-          Regulatory Compliant
+          Em Conformidade com Banco Central
         </StatusBadge>
       </Stack>
 
       <Grid container spacing={3}>
         {consents.map((consent) => (
-          <Grid item xs={12} md={4} key={consent.id}>
-            <BentoCard variant="white" sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={consent.id}>
+            <BentoCard
+              variant="white"
+              sx={{
+                p: 3,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}
+            >
               <Box>
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
-                  <Typography sx={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: '16px', color: '#1D1D1D' }}>
+                  <Typography
+                    sx={{
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      fontWeight: 700,
+                      fontSize: '16px',
+                      color: '#1D1D1D'
+                    }}
+                  >
                     {consent.institution}
                   </Typography>
                   <StatusBadge variant={consent.status === 'ACTIVE' ? 'lime' : 'warning'}>
-                    {consent.status === 'ACTIVE' ? 'Active Consent' : 'Expiring Soon'}
+                    {consent.status === 'ACTIVE' ? 'Autorização Ativa' : 'Renovação Próxima'}
                   </StatusBadge>
                 </Stack>
-
-                <Typography sx={{ fontSize: '11px', color: '#919EAB', mb: 2 }}>
-                  Consent ID: <code>{consent.consent_id}</code>
-                </Typography>
 
                 <Stack spacing={1} sx={{ p: 2, borderRadius: '14px', bgcolor: '#F3F3F3', mb: 2.5 }}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <IconClock size={15} color="#919EAB" />
                     <Typography sx={{ fontSize: '12px', color: '#666666' }}>
-                      Expires In: <strong>{consent.days_remaining} days</strong>
+                      Expira em: <strong>{consent.days_remaining} dias</strong>
                     </Typography>
                   </Stack>
                   <Typography sx={{ fontSize: '11px', color: '#919EAB' }}>
-                    Valid until {new Date(consent.expires_at).toLocaleDateString()}
+                    Válido até {new Date(consent.expires_at).toLocaleDateString('pt-BR')}
                   </Typography>
 
                   <Box sx={{ mt: 1 }}>
-                    <Typography sx={{ fontSize: '11px', fontWeight: 600, color: '#1D1D1D', mb: 0.5 }}>
-                      Authorized Scopes:
+                    <Typography sx={{ fontSize: '11px', fontWeight: 600, color: '#1D1D1D', mb: 0.75 }}>
+                      Permissões Ativas:
                     </Typography>
-                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                    <Stack spacing={0.5}>
                       {consent.permissions.map((p) => (
-                        <Box
-                          key={p}
-                          sx={{
-                            px: 1,
-                            py: 0.25,
-                            borderRadius: '6px',
-                            bgcolor: '#FFFFFF',
-                            border: '1px solid #E8E8E8',
-                            fontSize: '10px',
-                            color: '#666666'
-                          }}
-                        >
-                          {p}
-                        </Box>
+                        <Stack key={p} direction="row" spacing={1} alignItems="center">
+                          <IconCheck size={13} color="#15803d" />
+                          <Typography sx={{ fontSize: '11px', color: '#666666' }}>
+                            {permissionLabels[p] || p}
+                          </Typography>
+                        </Stack>
                       ))}
                     </Stack>
                   </Box>
@@ -117,22 +127,28 @@ export default function ConsentsView() {
               </Box>
 
               <Button
-                variant={consent.days_remaining < 30 ? 'contained' : 'outlined'}
+                variant={consent.status === 'ACTIVE' ? 'outlined' : 'contained'}
                 fullWidth
                 startIcon={<IconRefresh size={14} />}
                 sx={{
                   borderRadius: '9999px',
-                  fontSize: '11px',
-                  py: 1,
-                  bgcolor: consent.days_remaining < 30 ? '#1D1D1D' : '#FFFFFF',
-                  color: consent.days_remaining < 30 ? '#FFFFFF' : '#1D1D1D',
-                  borderColor: '#E8E8E8',
-                  '&:hover': {
-                    bgcolor: consent.days_remaining < 30 ? '#000000' : '#F3F3F3'
-                  }
+                  ...(consent.status === 'ACTIVE'
+                    ? {
+                        borderColor: '#E8E8E8',
+                        color: '#1D1D1D',
+                        bgcolor: '#FFFFFF',
+                        '&:hover': { bgcolor: '#F3F3F3' }
+                      }
+                    : {
+                        bgcolor: '#1D1D1D',
+                        color: '#FFFFFF',
+                        '&:hover': { bgcolor: '#000000' }
+                      }),
+                  fontSize: '12px',
+                  py: 0.75
                 }}
               >
-                {consent.days_remaining < 30 ? 'Renew Consent Now' : 'Check Consent Status'}
+                {consent.status === 'ACTIVE' ? 'Verificar Status da Conexão' : 'Renovar Autorização'}
               </Button>
             </BentoCard>
           </Grid>

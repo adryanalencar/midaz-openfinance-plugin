@@ -32,9 +32,9 @@ export default function DashboardView() {
   const [activeTab, setActiveTab] = useState('all');
 
   const tabs = [
-    { label: 'All Statements', value: 'all' },
-    { label: 'Intercepted for Matcher', value: 'matcher' },
-    { label: 'Direct Ledger Deposits', value: 'direct' }
+    { label: 'Todos os Lançamentos', value: 'all' },
+    { label: 'Vendas no Cartão', value: 'matcher' },
+    { label: 'Depósitos e PIX', value: 'direct' }
   ];
 
   const loadData = async () => {
@@ -95,14 +95,14 @@ export default function DashboardView() {
               mb: 0.5
             }}
           >
-            Open Finance Sync
+            Gestão Open Finance e Extratos
           </Typography>
           <Typography variant="body2" sx={{ color: '#919EAB' }}>
-            Automated bank statement mirroring &amp; double-entry ledger routing
+            Acompanhamento consolidado de saldos bancários e conciliação automática com maquininhas
           </Typography>
         </Box>
 
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" gap={1}>
           <Button
             variant="contained"
             onClick={handleManualSync}
@@ -116,7 +116,7 @@ export default function DashboardView() {
               '&:hover': { bgcolor: '#000000' }
             }}
           >
-            {syncing ? 'Syncing Pluggy...' : 'Sync All Accounts'}
+            {syncing ? 'Sincronizando extratos...' : 'Sincronizar Bancos'}
           </Button>
           <PillTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
         </Stack>
@@ -124,34 +124,34 @@ export default function DashboardView() {
 
       {/* KPI Bento Grid */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <KpiCard
-            title="Connected Bank Accounts"
+            title="Bancos Conectados"
             value="3"
-            subtitle="Itaú, Bradesco &amp; BB"
-            badgeText="All Synced"
+            subtitle="Itaú, Bradesco e Banco do Brasil"
+            badgeText="Sincronizados"
             badgeVariant="lime"
             variant="white"
             icon={<IconBuildingBank size={20} />}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <KpiCard
-            title="Ingested Statement Items"
+            title="Lançamentos no Mês"
             value="1.420"
-            subtitle="Current billing cycle"
-            badgeText="100% Mirrored"
+            subtitle="Extratos 100% atualizados"
+            badgeText="Atualizado"
             badgeVariant="success"
             variant="white"
             icon={<IconCheck size={20} />}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <KpiCard
-            title="Consolidated Liquid Cash"
+            title="Saldo Bancário Consolidado"
             value="R$ 1.443.660,75"
-            subtitle="Mirrored into Midaz Ledger"
-            badgeText="Real-time"
+            subtitle="Disponível em conta corrente"
+            badgeText="Tempo Real"
             badgeVariant="dark"
             variant="lime"
             icon={<IconArrowsExchange size={20} />}
@@ -159,14 +159,14 @@ export default function DashboardView() {
         </Grid>
       </Grid>
 
-      {/* Featured Bento Highlight (Inter-Plugin Choreography) */}
+      {/* Featured Bento Highlight (Reconciliation Antiduplication) */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={7}>
+        <Grid size={{ xs: 12, lg: 7 }}>
           <BentoCard variant="dark" sx={{ height: '100%', p: 3.5 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
               <Box>
                 <StatusBadge variant="lime" sx={{ mb: 1.5 }}>
-                  Inter-Plugin Protocol Active
+                  Proteção Antiduplicação Ativa
                 </StatusBadge>
                 <Typography
                   sx={{
@@ -178,14 +178,10 @@ export default function DashboardView() {
                     mb: 1
                   }}
                 >
-                  Selective Routing via reconciliation.enabled
+                  Conciliação Inteligente entre Maquininhas e Bancos
                 </Typography>
                 <Typography sx={{ color: '#919EAB', fontSize: '13px', lineHeight: 1.6, maxWidth: 540 }}>
-                  When an account is flagged with{' '}
-                  <Box component="span" sx={{ color: '#F0FD63', fontWeight: 600 }}>
-                    reconciliation.enabled == true
-                  </Box>
-                  , card settlement credits are routed to Matcher 6 as Source B instead of posting direct deposits. This prevents doubling the merchant&apos;s balance.
+                  O Midaz cruza automaticamente os comprovantes de venda das suas maquininhas de cartão com os depósitos bancários. Assim, seu caixa e seu extrato ficam sempre perfeitamente conciliados, eliminando duplicidade de saldo.
                 </Typography>
               </Box>
               <Box
@@ -203,44 +199,44 @@ export default function DashboardView() {
 
             <Stack direction="row" spacing={3} sx={{ pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
               <Box>
-                <Typography sx={{ color: '#919EAB', fontSize: '11px', textTransform: 'uppercase' }}>Provider</Typography>
+                <Typography sx={{ color: '#919EAB', fontSize: '11px', textTransform: 'uppercase' }}>Origem das Vendas</Typography>
                 <Typography sx={{ color: '#FFFFFF', fontWeight: 600, fontSize: '14px', mt: 0.5 }}>
-                  Pluggy Open Finance API
+                  Maquininhas Integradas
                 </Typography>
               </Box>
               <Box>
-                <Typography sx={{ color: '#919EAB', fontSize: '11px', textTransform: 'uppercase' }}>Routing Target</Typography>
+                <Typography sx={{ color: '#919EAB', fontSize: '11px', textTransform: 'uppercase' }}>Destino dos Depósitos</Typography>
                 <Typography sx={{ color: '#FFFFFF', fontWeight: 600, fontSize: '14px', mt: 0.5 }}>
-                  Matcher 6 (:4018)
+                  Contas Bancárias Verificadas
                 </Typography>
               </Box>
               <Box>
-                <Typography sx={{ color: '#919EAB', fontSize: '11px', textTransform: 'uppercase' }}>Clearing Base</Typography>
+                <Typography sx={{ color: '#919EAB', fontSize: '11px', textTransform: 'uppercase' }}>Status da Proteção</Typography>
                 <Typography sx={{ color: '#F0FD63', fontWeight: 600, fontSize: '14px', mt: 0.5 }}>
-                  @external/pluggy_*
+                  100% Automática
                 </Typography>
               </Box>
             </Stack>
           </BentoCard>
         </Grid>
 
-        <Grid item xs={12} md={5}>
+        <Grid size={{ xs: 12, lg: 5 }}>
           <BentoCard variant="white" sx={{ height: '100%', p: 3.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <Box>
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography sx={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: '16px' }}>
-                  Open Finance Consents
+                  Autorizações Open Finance
                 </Typography>
                 <StatusBadge variant="lime">
-                  3 Authorized
+                  3 Ativas
                 </StatusBadge>
               </Stack>
 
               <Stack spacing={2}>
                 {[
-                  { name: 'Banco Itaú', type: 'Checking + Extract', days: '267 days left', variant: 'lime' },
-                  { name: 'Banco Bradesco', type: 'Checking + Extract', days: '284 days left', variant: 'lime' },
-                  { name: 'Banco do Brasil', type: 'Checking + Extract', days: '10 days left', variant: 'pending' }
+                  { name: 'Banco Itaú', type: 'Conta Corrente & Extrato', days: '267 dias restantes', variant: 'lime' },
+                  { name: 'Banco Bradesco', type: 'Conta Corrente & Extrato', days: '284 dias restantes', variant: 'lime' },
+                  { name: 'Banco do Brasil', type: 'Conta Corrente & Extrato', days: '10 dias restantes', variant: 'pending' }
                 ].map((c) => (
                   <Box
                     key={c.name}
@@ -301,7 +297,7 @@ export default function DashboardView() {
                 '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' }
               }}
             >
-              Manage Consents &amp; Renewals
+              Gerenciar Autorizações e Renovações
             </Button>
           </BentoCard>
         </Grid>
@@ -320,14 +316,14 @@ export default function DashboardView() {
                 letterSpacing: '-0.02em'
               }}
             >
-              Mirrored Statement Items
+              Últimas Movimentações Bancárias
             </Typography>
             <Typography variant="caption" sx={{ color: '#919EAB' }}>
-              Real-time audit trail of bank transactions and their ledger destinations
+              Extrato bancário em tempo real conciliado com o Midaz
             </Typography>
           </Box>
           <StatusBadge variant="lime">
-            Live Stream
+            Tempo Real
           </StatusBadge>
         </Stack>
 
@@ -375,7 +371,7 @@ export default function DashboardView() {
                     {tx.description}
                   </Typography>
                   <Typography sx={{ fontSize: '11px', color: '#919EAB', mt: 0.25 }}>
-                    {tx.bank} • {tx.account_alias} • {tx.booking_date}
+                    {tx.bank} • {tx.booking_date}
                   </Typography>
                 </Box>
               </Stack>
@@ -391,13 +387,13 @@ export default function DashboardView() {
                   {formatCurrency(tx.amount)}
                 </Typography>
                 <Typography sx={{ fontSize: '11px', color: '#919EAB' }}>
-                  {tx.type}
+                  {tx.type === 'CREDIT' ? 'Crédito em Conta' : 'Débito'}
                 </Typography>
               </Box>
 
               <Box sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}>
                 <StatusBadge variant={tx.reconciliation_flag ? 'lime' : 'neutral'}>
-                  {tx.reconciliation_flag ? 'Routed to Matcher 6' : 'Direct Midaz Posting'}
+                  {tx.reconciliation_flag ? 'Venda de Cartão Conciliada' : 'Depósito em Conta'}
                 </StatusBadge>
               </Box>
             </Box>

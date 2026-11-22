@@ -1,32 +1,32 @@
 const openfinanceMenu = {
   id: 'group-openfinance',
-  title: 'Open Finance Sync',
+  title: 'Open Finance',
   type: 'group',
   children: [
     {
       id: 'openfinance-dashboard',
-      title: 'Sync Overview',
+      title: 'Visão Geral',
       type: 'item',
       url: '/openfinance',
       icon: 'IconBuildingBank'
     },
     {
       id: 'connected-accounts',
-      title: 'Bank Accounts',
+      title: 'Contas Bancárias',
       type: 'item',
       url: '/openfinance/accounts',
       icon: 'IconWallet'
     },
     {
       id: 'consents-management',
-      title: 'Consents Lifecycle',
+      title: 'Autorizações',
       type: 'item',
       url: '/openfinance/consents',
       icon: 'IconShieldCheck'
     },
     {
       id: 'statement-transactions',
-      title: 'Statement Items',
+      title: 'Extrato Consolidado',
       type: 'item',
       url: '/openfinance/transactions',
       icon: 'IconArrowsExchange'
